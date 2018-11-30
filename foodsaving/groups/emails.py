@@ -12,7 +12,7 @@ from foodsaving.groups.models import Group, GroupNotificationType, GroupMembersh
 from foodsaving.pickups.models import PickupDate, Feedback
 from foodsaving.utils.email_utils import prepare_email
 from foodsaving.utils.frontend_urls import group_wall_url, group_settings_url
-
+import datetime as dt
 
 def prepare_group_summary_data(group, from_date, to_date):
     new_users = group.members.filter(
@@ -80,17 +80,28 @@ def prepare_group_summary_emails(group, context):
 
 
 def calculate_group_summary_dates(group):
+
+    now = dt.datetime.today()
+
+    week = dt.datetime.weekday(now)
     with timezone.override(group.timezone):
         tz = get_current_timezone()
 
         # midnight last night in the groups local timezone
         midnight = tz.localize(timezone.now().replace(tzinfo=None, hour=0, minute=0, second=0, microsecond=0))
 
-        # 7 days before that
-        from_date = midnight - relativedelta(days=6)
+        if(week != 5):
+            # 7 days before that
+            from_date = midnight - relativedelta(days=7)
 
-        # a week after from date
-        to_date = from_date + relativedelta(days=7)
+            # a week after from date
+            to_date = from_date + relativedelta(days=7)
+        else:
+            # 7 days before that
+            from_date = midnight - relativedelta(days=6)
+
+            # a week after from date
+            to_date = from_date + relativedelta(days=7)
 
         return from_date, to_date
 
